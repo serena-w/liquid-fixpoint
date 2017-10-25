@@ -159,6 +159,7 @@ visitExpr !v    = vE
     step _ !e@(ESym _)       = return e
     step _ !e@(ECon _)       = return e
     step _ !e@(EVar _)       = return e
+    step _ !e@(PHole)        = return e
     step !c !(EApp f e)      = EApp        <$> vE c f  <*> vE c e
     step !c !(ENeg e)        = ENeg        <$> vE c e
     step !c !(EBin o e1 e2)  = EBin o      <$> vE c e1 <*> vE c e2
@@ -214,6 +215,7 @@ mapMExpr f = go
     go e@(ECon _)      = f e
     go e@(EVar _)      = f e
     go e@(PKVar _ _)   = f e
+    go e@(PHole)       = f e
     go (PGrad k s i e) = f =<< (PGrad k s i <$>  go e                     )
     go (ENeg e)        = f =<< (ENeg        <$>  go e                     )
     go (PNot p)        = f =<< (PNot        <$>  go p                     )

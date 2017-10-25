@@ -160,9 +160,9 @@ isKvar _           = False
 class HasGradual a where
   isGradual :: a -> Bool
   gVars     :: a -> [KVar]
-  gVars _ = [] 
+  gVars _ = []
   ungrad    :: a -> a
-  ungrad x = x 
+  ungrad x = x
 
 instance HasGradual Expr where
   isGradual (PGrad {}) = True
@@ -280,6 +280,7 @@ data Expr = ESym !SymConst
           | PAll   ![(Symbol, Sort)] !Expr
           | PExist ![(Symbol, Sort)] !Expr
           | PGrad  !KVar !Subst !GradInfo !Expr
+          | PHole
           deriving (Eq, Show, Data, Typeable, Generic)
 
 type Pred = Expr
@@ -341,6 +342,7 @@ debruijnIndex = go
     go (PExist _ e)    = go e
     go (PKVar _ _)     = 1
     go (PGrad _ _ _ e) = go e
+    go PHole           = 1
 
 
 -- | Parsed refinement of @Symbol@ as @Expr@
@@ -428,6 +430,7 @@ instance Fixpoint Expr where
   toFix (ETApp e s)      = text "tapp" <+> toFix e <+> toFix s
   toFix (ETAbs e s)      = text "tabs" <+> toFix e <+> toFix s
   toFix (PGrad k _ _ e)  = toFix e <+> text "&&" <+> toFix k -- text "??" -- <+> toFix k <+> toFix su
+  toFix PHole            = text "_"
   toFix (ELam (x,s) e)   = text "lam" <+> toFix x <+> ":" <+> toFix s <+> "." <+> toFix e
 
   simplify (PAnd [])     = PTrue
@@ -600,6 +603,7 @@ instance PPrint Expr where
   pprintPrec _ _ (ETApp e s)     = "ETApp" <+> toFix e <+> toFix s
   pprintPrec _ _ (ETAbs e s)     = "ETAbs" <+> toFix e <+> toFix s
   pprintPrec z k (PGrad x _ _ e) = pprintPrec z k e <+> "&&" <+> toFix x -- "??"
+  pprintPrec _ _ PHole           = "_"
 
 pprintQuant :: Tidy -> Doc -> [(Symbol, Sort)] -> Expr -> Doc
 pprintQuant k d xts p = (d <+> toFix xts)
