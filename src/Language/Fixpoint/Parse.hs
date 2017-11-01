@@ -350,6 +350,7 @@ expr0P :: Parser Expr
 expr0P
   =  trueP
  <|> falseP
+ <|> holeP
  <|> (fastIfP EIte exprP)
  <|> (ESym <$> symconstP)
  <|> (ECon <$> constantP)
@@ -568,6 +569,7 @@ bvSortP = mkSort <$> (bvSizeP "Size32" S32 <|> bvSizeP "Size64" S64)
 pred0P :: Parser Expr
 pred0P =  trueP
       <|> falseP
+      <|> holeP
       <|> (reservedOp "??" >> makeUniquePGrad)
       <|> kvarPredP
       <|> (fastIfP pIte predP)
@@ -578,7 +580,6 @@ pred0P =  trueP
       <|> (eVar <$> symbolP)
       <|> (reservedOp "&&" >> pGAnds <$> predsP)
       <|> (reservedOp "||" >> POr  <$> predsP)
-      <|> (return PHole)
 
 makeUniquePGrad :: Parser Expr
 makeUniquePGrad
@@ -590,6 +591,9 @@ makeUniquePGrad
 trueP, falseP :: Parser Expr
 trueP  = reserved "true"  >> return PTrue
 falseP = reserved "false" >> return PFalse
+
+holeP :: Parser Expr
+holeP = reserved "_" >> return PHole
 
 kvarPredP :: Parser Expr
 kvarPredP = PKVar <$> kvarP <*> substP
